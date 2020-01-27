@@ -16,6 +16,8 @@ pub fn encode_39<'a>(
     bytes: &[u8; 39],
     buf: &'a mut [MaybeUninit<u8>; LEN_39],
 ) -> &'a mut str {
+    #![allow(clippy::many_single_char_names)]
+
     // This uses the same strategy as version 0.11 of the `base64` crate,
     // however it handles all of `bytes` at once.
 
