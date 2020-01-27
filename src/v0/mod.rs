@@ -108,7 +108,7 @@ impl hash::Hash for OcidV0 {
 
     #[inline]
     fn hash_slice<H: hash::Hasher>(data: &[Self], state: &mut H) {
-        state.write(Self::as_bytes_slice(data))
+        state.write(Self::slice_as_bytes(data))
     }
 }
 
@@ -303,14 +303,14 @@ impl OcidV0 {
 
     /// Returns a slice of raw IDs for all of `ids`.
     #[inline]
-    pub fn as_raw_slice(ids: &[Self]) -> &[RawOcidV0] {
+    pub fn slice_as_raw(ids: &[Self]) -> &[RawOcidV0] {
         let ptr = ids.as_ptr() as *const RawOcidV0;
         unsafe { slice::from_raw_parts(ptr, ids.len()) }
     }
 
     /// Returns a slice of bytes for all of `ids`.
     #[inline]
-    pub fn as_bytes_slice(ids: &[Self]) -> &[u8] {
+    pub fn slice_as_bytes(ids: &[Self]) -> &[u8] {
         let ptr = ids.as_ptr() as *const u8;
         let len = ids.len() * LEN;
         unsafe { slice::from_raw_parts(ptr, len) }

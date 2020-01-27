@@ -38,7 +38,7 @@ impl RawOcidV0 {
 
     /// Returns a slice of bytes for all of `ids`.
     #[inline]
-    pub fn as_bytes_slice(ids: &[Self]) -> &[u8] {
+    pub fn slice_as_bytes(ids: &[Self]) -> &[u8] {
         let ptr = ids.as_ptr() as *const u8;
         let len = ids.len() * LEN;
         unsafe { slice::from_raw_parts(ptr, len) }
