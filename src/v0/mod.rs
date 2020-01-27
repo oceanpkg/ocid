@@ -4,13 +4,32 @@ use core::{
     cmp, fmt, hash,
     mem::{self, MaybeUninit},
     slice,
+    convert::TryFrom,
 };
 
 mod raw;
 pub use raw::RawOcidV0;
 
-const SIZE: usize = 42;
-const BASE64_LEN: usize = 56;
+const LEN: usize = 39;
+const BASE64_LEN: usize = 52;
+
+#[inline]
+fn size_from_u64(size: u64) -> Option<[u8; 6]> {
+    #[repr(C)]
+    struct SizeComposition {
+        invalid: [u8; 2],
+        valid: [u8; 6],
+    }
+
+    let size = size.to_be_bytes();
+    let comp: SizeComposition = unsafe { mem::transmute(size) };
+
+    if comp.invalid == [0, 0] {
+        Some(comp.valid)
+    } else {
+        None
+    }
+}
 
 /// Ocean Content ID, Version 0.
 ///
@@ -18,9 +37,9 @@ const BASE64_LEN: usize = 56;
 ///
 /// | Component | Offset | Size | Description
 /// | :-------- | :----- | :--- | :----------
-/// | Version   | 0      | 2    | [Big-endian] version number; always zero
-/// | Size      | 2      | 8    | [Big-endian] content size
-/// | Hash      | 10     | 32   | [BLAKE3] content hash
+/// | Version   | 0      |  1   | ID version number; always zero
+/// | Size      | 1      |  6   | [Big-endian] content size
+/// | Hash      | 7      | 32   | [BLAKE3] content hash
 ///
 /// This representation has some notable properties:
 ///
@@ -117,10 +136,13 @@ impl OcidV0 {
     #[cfg(any(test, docsrs, feature = "blake3"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "blake3")))]
     #[inline]
-    pub fn new(content: &[u8]) -> OcidV0 {
-        let size = (content.len() as u64).to_be_bytes();
+    pub fn new(content: &[u8]) -> Option<OcidV0> {
+        let size = u64::try_from(content.len()).ok()?;
+        let size = size_from_u64(size)?;
+
         let hash = blake3::hash(content);
-        Self::from_parts(size, hash.into())
+
+        Some(Self::from_parts(size, hash.into()))
     }
 
     /// Generates a random ID from `rng`.
@@ -134,7 +156,7 @@ impl OcidV0 {
     where
         R: rand_core::RngCore,
     {
-        let mut id = Self::from_parts([0; 8], [0; 32]);
+        let mut id = Self::from_parts([0; 6], [0; 32]);
         rng.fill_bytes(id.body_mut());
 
         // Don't loop since `rng` could just emit zeros indefinitely. Calling
@@ -158,7 +180,7 @@ impl OcidV0 {
     where
         R: rand_core::RngCore,
     {
-        let mut id = Self::from_parts([0; 8], [0; 32]);
+        let mut id = Self::from_parts([0; 6], [0; 32]);
         rng.try_fill_bytes(id.body_mut())?;
 
         // Don't loop since `rng` could just emit zeros indefinitely. Calling
@@ -172,9 +194,9 @@ impl OcidV0 {
 
     /// Creates an ID from `size` and `hash`.
     #[inline]
-    pub const fn from_parts(size: [u8; 8], hash: [u8; 32]) -> OcidV0 {
+    pub const fn from_parts(size: [u8; 6], hash: [u8; 32]) -> OcidV0 {
         Self(RawOcidV0 {
-            version: [0, 0],
+            version: 0,
             size,
             hash,
         })
@@ -184,7 +206,7 @@ impl OcidV0 {
     #[inline]
     pub fn from_raw(raw: RawOcidV0) -> Option<OcidV0> {
         match raw.version {
-            [0, 0] => Some(Self(raw)),
+            0 => Some(Self(raw)),
             _ => None,
         }
     }
@@ -197,47 +219,47 @@ impl OcidV0 {
 
     /// Creates an ID from the raw bytes.
     #[inline]
-    pub fn from_bytes(bytes: [u8; SIZE]) -> Option<OcidV0> {
-        match (bytes[0], bytes[1]) {
-            (0, 0) => Some(unsafe { Self::from_bytes_unchecked(bytes) }),
+    pub fn from_bytes(bytes: [u8; LEN]) -> Option<OcidV0> {
+        match bytes[0] {
+            0 => Some(unsafe { Self::from_bytes_unchecked(bytes) }),
             _ => None,
         }
     }
 
     /// Creates an ID from the raw bytes.
     #[inline]
-    pub fn from_bytes_ref(bytes: &[u8; SIZE]) -> Option<&OcidV0> {
-        match (bytes[0], bytes[1]) {
-            (0, 0) => Some(unsafe { Self::from_bytes_ref_unchecked(bytes) }),
+    pub fn from_bytes_ref(bytes: &[u8; LEN]) -> Option<&OcidV0> {
+        match bytes[0] {
+            0 => Some(unsafe { Self::from_bytes_ref_unchecked(bytes) }),
             _ => None,
         }
     }
 
     /// Creates an ID from the raw bytes.
     #[inline]
-    pub fn from_bytes_mut(bytes: &mut [u8; SIZE]) -> Option<&mut OcidV0> {
-        match (bytes[0], bytes[1]) {
-            (0, 0) => Some(unsafe { Self::from_bytes_mut_unchecked(bytes) }),
+    pub fn from_bytes_mut(bytes: &mut [u8; LEN]) -> Option<&mut OcidV0> {
+        match bytes[0] {
+            0 => Some(unsafe { Self::from_bytes_mut_unchecked(bytes) }),
             _ => None,
         }
     }
 
     /// Creates an ID from the raw bytes.
     #[inline]
-    pub unsafe fn from_bytes_unchecked(bytes: [u8; SIZE]) -> OcidV0 {
+    pub unsafe fn from_bytes_unchecked(bytes: [u8; LEN]) -> OcidV0 {
         mem::transmute(bytes)
     }
 
     /// Creates an ID from the raw bytes.
     #[inline]
-    pub unsafe fn from_bytes_ref_unchecked(bytes: &[u8; SIZE]) -> &OcidV0 {
+    pub unsafe fn from_bytes_ref_unchecked(bytes: &[u8; LEN]) -> &OcidV0 {
         &*(bytes.as_ptr() as *const Self)
     }
 
     /// Creates an ID from the raw bytes.
     #[inline]
     pub unsafe fn from_bytes_mut_unchecked(
-        bytes: &mut [u8; SIZE],
+        bytes: &mut [u8; LEN],
     ) -> &mut OcidV0 {
         &mut *(bytes.as_mut_ptr() as *mut Self)
     }
@@ -245,9 +267,9 @@ impl OcidV0 {
     /// Creates an ID from the raw bytes.
     #[inline]
     pub fn from_slice(bytes: &[u8]) -> Option<(&OcidV0, &[u8])> {
-        if bytes.len() >= SIZE {
-            let head = unsafe { &*(bytes.as_ptr() as *const [u8; SIZE]) };
-            let tail = &bytes[SIZE..];
+        if bytes.len() >= LEN {
+            let head = unsafe { &*(bytes.as_ptr() as *const [u8; LEN]) };
+            let tail = &bytes[LEN..];
             let id = Self::from_bytes_ref(head)?;
             Some((id, tail))
         } else {
@@ -260,9 +282,9 @@ impl OcidV0 {
     pub fn from_slice_mut(
         bytes: &mut [u8],
     ) -> Option<(&mut OcidV0, &mut [u8])> {
-        if bytes.len() >= SIZE {
-            let head = unsafe { &mut *(bytes.as_mut_ptr() as *mut [u8; SIZE]) };
-            let tail = &mut bytes[SIZE..];
+        if bytes.len() >= LEN {
+            let head = unsafe { &mut *(bytes.as_mut_ptr() as *mut [u8; LEN]) };
+            let tail = &mut bytes[LEN..];
             let id = Self::from_bytes_mut(head)?;
             Some((id, tail))
         } else {
@@ -273,7 +295,7 @@ impl OcidV0 {
     /// Creates an ID that represents an empty file.
     #[inline]
     pub fn empty() -> OcidV0 {
-        Self::from_parts([0; 8], [0; 32])
+        Self::from_parts([0; 6], [0; 32])
     }
 
     /// Returns a slice of raw IDs for all of `ids`.
@@ -287,40 +309,35 @@ impl OcidV0 {
     #[inline]
     pub fn as_bytes_slice(ids: &[Self]) -> &[u8] {
         let ptr = ids.as_ptr() as *const u8;
-        let len = ids.len() * SIZE;
+        let len = ids.len() * LEN;
         unsafe { slice::from_raw_parts(ptr, len) }
     }
 
-    /// Returns the ID version as big-endian integer bytes.
-    ///
-    /// In correct code, this always returns `[0, 0]`.
-    #[inline]
-    pub fn version(&self) -> &[u8; 2] {
-        let version = &self.0.version;
-        debug_assert_eq!(*version, [0, 0], "{} is not version 0", self);
-        version
-    }
-
-    /// Returns the ID version as a native integer.
+    /// Returns the ID version.
     ///
     /// In correct code, this always returns 0.
     #[inline]
-    pub fn version_u16(&self) -> u16 {
-        let version = u16::from_be_bytes(self.0.version);
+    pub fn version(&self) -> u8 {
+        let version = self.0.version;
         debug_assert_eq!(version, 0, "{} is not version 0", self);
         version
     }
 
     /// Returns the size of the source content as big-endian integer bytes.
     #[inline]
-    pub fn size(&self) -> &[u8; 8] {
+    pub fn size(&self) -> &[u8; 6] {
         &self.0.size
     }
 
     /// Returns the size of the source content as a native integer.
     #[inline]
     pub fn size_u64(&self) -> u64 {
-        u64::from_be_bytes(self.0.size)
+        // SAFETY: The bytes after `size` belong to `hash`. The top 2 bytes are
+        // read but then discarded by the shift.
+        let size = unsafe {
+            u64::from_be_bytes(*self.0.size.as_ptr().cast::<[u8; 8]>())
+        };
+        size >> 16
     }
 
     /// Returns whether the content has a size of 0.
@@ -330,7 +347,7 @@ impl OcidV0 {
     /// a size of 0.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        self.0.size == [0; 8]
+        self.0.size == [0; 6]
     }
 
     /// Returns the [BLAKE3] hash of the content.
@@ -381,14 +398,14 @@ impl OcidV0 {
     /// Returns a shared reference to the body of the ID, i.e. everything after
     /// the version number.
     #[inline]
-    pub fn body(&self) -> &[u8; SIZE - 2] {
+    pub fn body(&self) -> &[u8; LEN - 1] {
         unsafe { &*(self.0.size.as_ptr() as *const _) }
     }
 
     /// Returns a mutable reference to the body of the ID, i.e. everything after
     /// the version number.
     #[inline]
-    pub fn body_mut(&mut self) -> &mut [u8; SIZE - 2] {
+    pub fn body_mut(&mut self) -> &mut [u8; LEN - 1] {
         unsafe { &mut *(self.0.size.as_mut_ptr() as *mut _) }
     }
 
@@ -412,19 +429,43 @@ impl OcidV0 {
 
     /// Returns the ID as its bytes.
     #[inline]
-    pub fn into_bytes(self) -> [u8; SIZE] {
+    pub fn into_bytes(self) -> [u8; LEN] {
         self.into_raw().into_bytes()
     }
 
     /// Returns a shared reference to the bytes of the ID.
     #[inline]
-    pub fn as_bytes(&self) -> &[u8; SIZE] {
+    pub fn as_bytes(&self) -> &[u8; LEN] {
         self.as_raw().as_bytes()
     }
 
     /// Returns a mutable reference to the bytes of the ID.
     #[inline]
-    pub unsafe fn as_bytes_mut(&mut self) -> &mut [u8; SIZE] {
+    pub unsafe fn as_bytes_mut(&mut self) -> &mut [u8; LEN] {
         self.as_raw_mut().as_bytes_mut()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand_core::RngCore;
+
+    #[test]
+    fn size_u64() {
+        let mut rng = rand_core::OsRng;
+
+        let mut gen_size = || -> (u64, [u8; 6]) {
+            let size_u64 = rng.next_u64() >> 16;
+            let size = size_from_u64(size_u64).unwrap();
+            (size_u64, size)
+        };
+
+        for _ in 0..1024 {
+            let (size_u64, size) = gen_size();
+
+            let id = OcidV0::from_parts(size, [0; 32]);
+            assert_eq!(id.size_u64(), size_u64);
+        }
     }
 }

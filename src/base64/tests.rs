@@ -5,24 +5,24 @@ use super::*;
 
 // Tests that our implementation is correct, using the implementation from the
 // `base64` crate as a reference. Having this test enables us to update the
-// implementation of `encode_42` to something faster while ensuring that it
+// implementation of `encode_39` to something faster while ensuring that it
 // stays correct.
 #[test]
-fn encode_42() {
+fn encode_39() {
     let mut rng = rand_core::OsRng;
-    let mut base64_buf = [0u8; LEN_42 * 2];
-    let mut crate_buf = [MaybeUninit::new(0); LEN_42];
+    let mut base64_buf = [0u8; LEN_39 * 2];
+    let mut crate_buf = [MaybeUninit::new(0); LEN_39];
 
     for _ in 0..2048 {
-        let mut bytes = [0u8; 42];
+        let mut bytes = [0u8; 39];
         rng.fill_bytes(&mut bytes);
 
         let base64_len =
             base64::encode_to_slice(&bytes, &mut base64_buf, &ALPHABET);
-        assert_eq!(base64_len, LEN_42);
+        assert_eq!(base64_len, LEN_39);
         let base64 = str::from_utf8(&base64_buf[..base64_len]).unwrap();
 
-        let encoded = super::encode_42(&bytes, &mut crate_buf);
+        let encoded = super::encode_39(&bytes, &mut crate_buf);
 
         assert_eq!(encoded, base64);
     }

@@ -9,8 +9,8 @@
 //!
 //! | Component | Offset | Size | Description
 //! | :-------- | :----- | :--- | :----------
-//! | Version   | 0      | 2    | [Big-endian] version number
-//! | Body      | 2      | _n_  | The ID's value
+//! | Version   | 0      | 1    | ID version number; currently only 0
+//! | Body      | 1      | _n_  | ID value
 //!
 //! _Body_ is defined entirely by the ID version. Check out the
 //! ["Memory Representation"](struct.OcidV0.html#memory-representation) section
@@ -33,7 +33,7 @@
 //! As a result of this alphabet, an [`OcidV0`] can be encoded as:
 //!
 //! ```txt
-//! ----------Ish4kFrwbhbPdoC2XnRb-nDGwMmSzlnGU252D5MxwDfqWR
+//! ------IsAAc5y5h0P2AEb3mPtfrloZ2IVxrdMhEfUeAeo6iwUjr-
 //! ```
 //!
 //! Note that characters are ordered by their [ASCII] value. This allows IDs to
@@ -58,7 +58,6 @@
 //!
 //! [ASCII]:                 https://en.wikipedia.org/wiki/ASCII
 //! [Base64]:                https://en.wikipedia.org/wiki/Base64
-//! [Big-endian]:            https://en.wikipedia.org/wiki/Endianness#Big-endian
 //! [hexadecimal]:           https://en.wikipedia.org/wiki/Hexadecimal
 //! [lexicographical order]: https://en.wikipedia.org/wiki/Lexicographical_order
 //! [RFC 4648 §5]:           https://tools.ietf.org/html/rfc4648#section-5
@@ -85,7 +84,7 @@ pub enum Ocid {
     /// [`OcidV0`]: struct.OcidV0.html
     V0 {
         /// The content size.
-        size: [u8; 8],
+        size: [u8; 6],
         /// The [BLAKE3] hash output.
         ///
         /// [BLAKE3]: https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE3
@@ -113,11 +112,20 @@ impl From<OcidV0> for Ocid {
 impl fmt::Debug for Ocid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Ocid::V0 { size, hash } => f
-                .debug_struct("V0")
-                .field("size", &u64::from_be_bytes(*size))
-                .field("hash", hash)
-                .finish(),
+            Ocid::V0 { size, hash } => {
+                let size = u64::from_be_bytes([
+                    0, 0,
+                    size[0], size[1],
+                    size[2], size[3],
+                    size[4], size[5],
+                ]);
+
+                f
+                    .debug_struct("V0")
+                    .field("size", &size)
+                    .field("hash", hash)
+                    .finish()
+            },
         }
     }
 }
