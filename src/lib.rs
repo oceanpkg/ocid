@@ -54,12 +54,24 @@
 //! assert_eq!(direct_ord, base64_ord);
 //! ```
 //!
+//! # Security Considerations
+//!
+//! OCIDs use cryptographic hashes for their collision reistance. This is
+//! important because two files having the same content ID would result in
+//! unwanted behavior.
+//!
+//! Note that OCIDs _do not_ use constant-time comparison functions, despite the
+//! cryptographic hash. **This is intentional.** OCIDs are not used as security
+//! codes, such as [message authentication codes (MACs)][mac]. They are strictly
+//! content addresses. As a result, comparisons should be fast.
+//!
 //! [`OcidV0`]: struct.OcidV0.html
 //!
 //! [ASCII]:                 https://en.wikipedia.org/wiki/ASCII
 //! [Base64]:                https://en.wikipedia.org/wiki/Base64
 //! [hexadecimal]:           https://en.wikipedia.org/wiki/Hexadecimal
 //! [lexicographical order]: https://en.wikipedia.org/wiki/Lexicographical_order
+//! [mac]:                   https://en.wikipedia.org/wiki/Message_authentication_code
 //! [RFC 4648 §5]:           https://tools.ietf.org/html/rfc4648#section-5
 //! [UTF-8]:                 https://en.wikipedia.org/wiki/UTF-8
 
