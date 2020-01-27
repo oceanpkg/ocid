@@ -215,6 +215,10 @@ impl OcidV0 {
     }
 
     /// Creates an ID from the raw internals.
+    ///
+    /// # Safety
+    ///
+    /// The raw ID may not have a non-zero version.
     #[inline]
     pub const unsafe fn from_raw_unchecked(raw: RawOcidV0) -> OcidV0 {
         Self(raw)
@@ -248,18 +252,30 @@ impl OcidV0 {
     }
 
     /// Creates an ID from the raw bytes.
+    ///
+    /// # Safety
+    ///
+    /// The raw ID bytes may not have a non-zero version.
     #[inline]
     pub unsafe fn from_bytes_unchecked(bytes: [u8; LEN]) -> OcidV0 {
         mem::transmute(bytes)
     }
 
     /// Creates an ID from the raw bytes.
+    ///
+    /// # Safety
+    ///
+    /// The raw ID bytes may not have a non-zero version.
     #[inline]
     pub unsafe fn from_bytes_ref_unchecked(bytes: &[u8; LEN]) -> &OcidV0 {
         &*(bytes.as_ptr() as *const Self)
     }
 
     /// Creates an ID from the raw bytes.
+    ///
+    /// # Safety
+    ///
+    /// The raw ID bytes may not have a non-zero version.
     #[inline]
     pub unsafe fn from_bytes_mut_unchecked(
         bytes: &mut [u8; LEN],
@@ -425,6 +441,10 @@ impl OcidV0 {
     }
 
     /// Returns a mutable reference to the raw ID.
+    ///
+    /// # Safety
+    ///
+    /// Care must be taken to not change the version from 0.
     #[inline]
     pub unsafe fn as_raw_mut(&mut self) -> &mut RawOcidV0 {
         &mut self.0
@@ -443,6 +463,10 @@ impl OcidV0 {
     }
 
     /// Returns a mutable reference to the bytes of the ID.
+    ///
+    /// # Safety
+    ///
+    /// Care must be taken to not change the version from 0.
     #[inline]
     pub unsafe fn as_bytes_mut(&mut self) -> &mut [u8; LEN] {
         self.as_raw_mut().as_bytes_mut()
