@@ -132,6 +132,8 @@ impl fmt::Display for OcidV0 {
 impl OcidV0 {
     /// Generates an ID by hashing `content` using [BLAKE3].
     ///
+    /// Returns `None` if `content` is larger than 2<sup>48</sup> - 1.
+    ///
     /// [BLAKE3]: https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE3
     #[cfg(any(test, docsrs, feature = "blake3"))]
     #[cfg_attr(docsrs, doc(cfg(feature = "blake3")))]
