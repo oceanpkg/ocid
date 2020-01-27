@@ -156,7 +156,7 @@ impl OcidV0 {
     where
         R: rand_core::RngCore,
     {
-        let mut id = Self::from_parts([0; 6], [0; 32]);
+        let mut id = Self::empty();
         rng.fill_bytes(id.body_mut());
 
         // Don't loop since `rng` could just emit zeros indefinitely. Calling
@@ -180,7 +180,7 @@ impl OcidV0 {
     where
         R: rand_core::RngCore,
     {
-        let mut id = Self::from_parts([0; 6], [0; 32]);
+        let mut id = Self::empty();
         rng.try_fill_bytes(id.body_mut())?;
 
         // Don't loop since `rng` could just emit zeros indefinitely. Calling
