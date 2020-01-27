@@ -294,7 +294,7 @@ impl OcidV0 {
 
     /// Creates an ID that represents an empty file.
     #[inline]
-    pub fn empty() -> OcidV0 {
+    pub const fn empty() -> OcidV0 {
         Self::from_parts([0; 6], [0; 32])
     }
 
