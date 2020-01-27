@@ -45,7 +45,7 @@ pub fn encode_39<'a>(
         ($($i:expr),+) => {{
             let offset = 0;
             $(
-                buf[offset + 0] = MaybeUninit::new(
+                buf[offset] = MaybeUninit::new(
                     ALPHABET[(($i >> 58) & LOW_SIX_BITS_64) as usize]
                 );
                 buf[offset + 1] = MaybeUninit::new(
@@ -79,7 +79,7 @@ pub fn encode_39<'a>(
     write_u64!(a, b, c, d, e, f);
 
     let offset = LEN_39 - 4;
-    buf[offset + 0] =
+    buf[offset] =
         MaybeUninit::new(ALPHABET[((g >> 26) & LOW_SIX_BITS_32) as usize]);
     buf[offset + 1] =
         MaybeUninit::new(ALPHABET[((g >> 20) & LOW_SIX_BITS_32) as usize]);
