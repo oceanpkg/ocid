@@ -42,7 +42,7 @@
 //!
 #![cfg_attr(not(feature = "rand_core"), doc = "```rust,ignore")]
 #![cfg_attr(feature = "rand_core", doc = "```")]
-//! # use oceanpkg_cid::OcidV0;
+//! # use ocid::OcidV0;
 //! # use rand_core::OsRng;
 //! let mut rng = OsRng;
 //! let a = OcidV0::rand(&mut rng);
