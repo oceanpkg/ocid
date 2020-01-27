@@ -14,7 +14,7 @@ const LEN: usize = 39;
 const BASE64_LEN: usize = 52;
 
 #[inline]
-fn size_from_u64(size: u64) -> Option<[u8; 6]> {
+fn size_bytes_from_u64(size: u64) -> Option<[u8; 6]> {
     #[repr(C)]
     struct SizeComposition {
         invalid: [u8; 2],
@@ -140,7 +140,7 @@ impl OcidV0 {
     #[inline]
     pub fn new(content: &[u8]) -> Option<OcidV0> {
         let size = u64::try_from(content.len()).ok()?;
-        let size = size_from_u64(size)?;
+        let size = size_bytes_from_u64(size)?;
 
         let hash = blake3::hash(content);
 
@@ -325,21 +325,21 @@ impl OcidV0 {
         version
     }
 
-    /// Returns the size of the source content as big-endian integer bytes.
-    #[inline]
-    pub fn size(&self) -> &[u8; 6] {
-        &self.0.size
-    }
-
     /// Returns the size of the source content as a native integer.
     #[inline]
-    pub fn size_u64(&self) -> u64 {
+    pub fn size(&self) -> u64 {
         // SAFETY: The bytes after `size` belong to `hash`. The top 2 bytes are
         // read but then discarded by the shift.
         let size = unsafe {
             u64::from_be_bytes(*self.0.size.as_ptr().cast::<[u8; 8]>())
         };
         size >> 16
+    }
+
+    /// Returns the size of the source content as big-endian integer bytes.
+    #[inline]
+    pub fn size_bytes(&self) -> &[u8; 6] {
+        &self.0.size
     }
 
     /// Returns whether the content has a size of 0.
@@ -454,12 +454,12 @@ mod tests {
     use rand_core::RngCore;
 
     #[test]
-    fn size_u64() {
+    fn size() {
         let mut rng = rand_core::OsRng;
 
         let mut gen_size = || -> (u64, [u8; 6]) {
             let size_u64 = rng.next_u64() >> 16;
-            let size = size_from_u64(size_u64).unwrap();
+            let size = size_bytes_from_u64(size_u64).unwrap();
             (size_u64, size)
         };
 
@@ -467,7 +467,7 @@ mod tests {
             let (size_u64, size) = gen_size();
 
             let id = OcidV0::from_parts(size, [0; 32]);
-            assert_eq!(id.size_u64(), size_u64);
+            assert_eq!(id.size(), size_u64);
         }
     }
 }
