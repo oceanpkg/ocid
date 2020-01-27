@@ -114,18 +114,14 @@ impl fmt::Debug for Ocid {
         match self {
             Ocid::V0 { size, hash } => {
                 let size = u64::from_be_bytes([
-                    0, 0,
-                    size[0], size[1],
-                    size[2], size[3],
-                    size[4], size[5],
+                    0, 0, size[0], size[1], size[2], size[3], size[4], size[5],
                 ]);
 
-                f
-                    .debug_struct("V0")
+                f.debug_struct("V0")
                     .field("size", &size)
                     .field("hash", hash)
                     .finish()
-            },
+            }
         }
     }
 }

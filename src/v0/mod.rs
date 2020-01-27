@@ -1,10 +1,11 @@
 //! Version 0.
 
 use core::{
-    cmp, fmt, hash,
+    cmp,
+    convert::TryFrom,
+    fmt, hash,
     mem::{self, MaybeUninit},
     slice,
-    convert::TryFrom,
 };
 
 mod raw;

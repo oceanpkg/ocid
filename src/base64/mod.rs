@@ -77,18 +77,14 @@ pub fn encode_39<'a>(
     write_u64!(a, b, c, d, e, f);
 
     let offset = LEN_39 - 4;
-    buf[offset + 0] = MaybeUninit::new(
-        ALPHABET[((g >> 26) & LOW_SIX_BITS_32) as usize]
-    );
-    buf[offset + 1] = MaybeUninit::new(
-        ALPHABET[((g >> 20) & LOW_SIX_BITS_32) as usize]
-    );
-    buf[offset + 2] = MaybeUninit::new(
-        ALPHABET[((g >> 14) & LOW_SIX_BITS_32) as usize]
-    );
-    buf[offset + 3] = MaybeUninit::new(
-        ALPHABET[((g >> 8) & LOW_SIX_BITS_32) as usize]
-    );
+    buf[offset + 0] =
+        MaybeUninit::new(ALPHABET[((g >> 26) & LOW_SIX_BITS_32) as usize]);
+    buf[offset + 1] =
+        MaybeUninit::new(ALPHABET[((g >> 20) & LOW_SIX_BITS_32) as usize]);
+    buf[offset + 2] =
+        MaybeUninit::new(ALPHABET[((g >> 14) & LOW_SIX_BITS_32) as usize]);
+    buf[offset + 3] =
+        MaybeUninit::new(ALPHABET[((g >> 8) & LOW_SIX_BITS_32) as usize]);
 
     unsafe {
         let buf = &mut *(buf as *mut _ as *mut [u8; LEN_39]);
