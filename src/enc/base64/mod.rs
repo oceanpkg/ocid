@@ -1,3 +1,17 @@
+//! [Base64] encoding/decoding.
+//!
+//! # Alphabet
+//!
+//! | Values | Characters
+//! | :----- | :---------
+//! | 0      | `-`
+//! | 1-10   | `0123456789`
+//! | 11-36  | `ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+//! | 37     | `_`
+//! | 38-63  | `abcdefghijklmnopqrstuvwxyz`
+//!
+//! [Base64]: https://en.wikipedia.org/wiki/Base64
+
 use core::{mem::MaybeUninit, str};
 
 #[cfg(test)]
@@ -12,7 +26,9 @@ const ALPHABET: [u8; 64] = *b"-\
                               _\
                               abcdefghijklmnopqrstuvwxyz";
 
-pub fn encode_39<'a>(
+/// Encodes the 39 base-8 `bytes` into `buf` as base-64, returning the encoded
+/// UTF-8 string.
+pub fn encode_base8_39<'a>(
     bytes: &[u8; 39],
     buf: &'a mut [MaybeUninit<u8>; LEN_39],
 ) -> &'a mut str {

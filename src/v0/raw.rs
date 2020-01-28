@@ -4,7 +4,7 @@ use core::{
 };
 
 use super::{BASE64_LEN, LEN};
-use crate::base64;
+use crate::enc::base64;
 
 /// The raw parts of an [`OcidV0`](struct.OcidV0.html).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -97,6 +97,6 @@ impl RawOcidV0 {
         &self,
         buf: &'b mut [MaybeUninit<u8>; BASE64_LEN],
     ) -> &'b mut str {
-        base64::encode_39(self.as_bytes(), buf)
+        base64::encode_base8_39(self.as_bytes(), buf)
     }
 }

@@ -5,10 +5,10 @@ use super::*;
 
 // Tests that our implementation is correct, using the implementation from the
 // `base64` crate as a reference. Having this test enables us to update the
-// implementation of `encode_39` to something faster while ensuring that it
-// stays correct.
+// implementation of `encode_base8_39` to something faster while ensuring that
+// it stays correct.
 #[test]
-fn encode_39() {
+fn encode_base8_39() {
     let mut rng = rand_core::OsRng;
     let mut base64_buf = [0u8; LEN_39 * 2];
     let mut crate_buf = [MaybeUninit::new(0); LEN_39];
@@ -22,7 +22,7 @@ fn encode_39() {
         assert_eq!(base64_len, LEN_39);
         let base64 = str::from_utf8(&base64_buf[..base64_len]).unwrap();
 
-        let encoded = super::encode_39(&bytes, &mut crate_buf);
+        let encoded = super::encode_base8_39(&bytes, &mut crate_buf);
 
         assert_eq!(encoded, base64);
     }

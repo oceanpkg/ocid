@@ -80,8 +80,7 @@
 
 use core::fmt;
 
-mod base64;
-
+pub mod enc;
 pub mod v0;
 
 #[doc(inline)]
