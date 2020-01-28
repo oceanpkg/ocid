@@ -84,8 +84,7 @@ impl RawOcidV0 {
         &self,
         buf: &'b mut [u8; BASE64_LEN],
     ) -> &'b mut str {
-        let buf = unsafe { &mut *(buf.as_mut_ptr() as *mut _) };
-        self.encode_base64_uninit(buf)
+        base64::encode_base8_39(self.as_bytes(), buf)
     }
 
     /// Writes the [Base64] encoding of the ID to `buf`, returning it as a
@@ -97,6 +96,6 @@ impl RawOcidV0 {
         &self,
         buf: &'b mut [MaybeUninit<u8>; BASE64_LEN],
     ) -> &'b mut str {
-        base64::encode_base8_39(self.as_bytes(), buf)
+        base64::encode_base8_39_uninit(self.as_bytes(), buf)
     }
 }

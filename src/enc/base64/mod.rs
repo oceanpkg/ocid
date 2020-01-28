@@ -28,7 +28,18 @@ const ALPHABET: [u8; 64] = *b"-\
 
 /// Encodes the 39 base-8 `bytes` into `buf` as base-64, returning the encoded
 /// UTF-8 string.
+#[inline]
 pub fn encode_base8_39<'a>(
+    bytes: &[u8; 39],
+    buf: &'a mut [u8; LEN_39],
+) -> &'a mut str {
+    let buf = unsafe { &mut *(buf.as_mut_ptr() as *mut _) };
+    encode_base8_39_uninit(bytes, buf)
+}
+
+/// Encodes the 39 base-8 `bytes` into `buf` as base-64, returning the encoded
+/// UTF-8 string.
+pub fn encode_base8_39_uninit<'a>(
     bytes: &[u8; 39],
     buf: &'a mut [MaybeUninit<u8>; LEN_39],
 ) -> &'a mut str {

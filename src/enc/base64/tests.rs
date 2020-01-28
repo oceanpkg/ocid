@@ -1,4 +1,4 @@
-use core::{mem::MaybeUninit, str};
+use core::str;
 use rand_core::RngCore;
 
 use super::*;
@@ -11,7 +11,7 @@ use super::*;
 fn encode_base8_39() {
     let mut rng = rand_core::OsRng;
     let mut base64_buf = [0u8; LEN_39 * 2];
-    let mut crate_buf = [MaybeUninit::new(0); LEN_39];
+    let mut crate_buf = [0u8; LEN_39];
 
     for _ in 0..2048 {
         let mut bytes = [0u8; 39];
